@@ -1,0 +1,95 @@
+\documentclass[12pt]{article}%
+\usepackage{amsfonts}
+\usepackage{fancyhdr}
+\usepackage{comment}
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2.2cm, right=2.2cm]%
+{geometry}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage{changepage}
+\usepackage{amssymb}
+\usepackage{graphicx}%
+\setcounter{MaxMatrixCols}{30}
+\newtheorem{theorem}{Theorem}
+\newtheorem{acknowledgement}[theorem]{Acknowledgement}
+\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{axiom}{Axiom}
+\newtheorem{case}[theorem]{Case}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{conclusion}[theorem]{Conclusion}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{criterion}[theorem]{Criterion}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{exercise}[theorem]{Exercise}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{solution}[theorem]{Solution}
+\newtheorem{summary}[theorem]{Summary}
+\newenvironment{proof}[1][Proof]{\textbf{#1.} }{\ \rule{0.5em}{0.5em}}
+
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+
+\begin{document}
+
+\title{CS280 Spring 2024 Assignment 2 \\ Part A}
+\author{Convolutional Neural Network}
+\maketitle
+
+\paragraph{Name:}
+
+\paragraph{Student ID:}
+
+\newpage
+
+
+\subsubsection*{\boldmath{1. Back propagation of CNNs (10 points)}}
+As shown below, let $$f_w(z)=z*w$$ be the forward model for a 2D single 
+layer linear convolutional network with a single input channel and a single 
+output channel, in which $w$ represents a 
+$3\times3$ convolution kernel with no padding and a stride of 1, and 
+$z$ represents a $128\times128$ single channel image. \\
+The following two functions must be implemented in order to implement 
+both the forward inference and back propagation for this single layer.
+$$x = F(z, w)$$
+$$(g_z, g_w) = G(\epsilon)$$
+The figures below illustrate the functions graphically.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics*[scale=0.3]{example.png}
+\end{figure}
+\begin{itemize}
+	\item Explain what the two functions $F(z, w)$ and $G(\epsilon)$ do.
+    For each function, explain why it is needed.    
+    \item What are the shapes of each of the following: $x$, $\epsilon$, $g_z$, and $g_w$
+    \item What is the computational cost (multiplications and additions) of the convolutional
+    layer for the forward propagation? What is the computational cost (multiplications and 
+    additions) of $g_w$ for the back propagation?
+
+\end{itemize}
+
+
+
+\newpage
+
+
+\subsubsection*{\textbf{2. Convolution Kernel (10 points)}}
+Assume there are two convolution kernels of size 
+$k_1$ and $k_2$ respectively (with no nonlinear activation function in-between).
+\begin{itemize}
+	\item Prove that the results of the two convolution operations can be expressed by a single convolution operation.
+	\item What is the dimensionality of the equivalent single convolution?
+ \item Is the converse true, i.e., 
+ Can a convolution operation be decomposed into two smaller convolution operations?
+\end{itemize}
+
+
+\end{document}
