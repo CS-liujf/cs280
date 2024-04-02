@@ -1,0 +1,13 @@
+*.swp
+*.pyc
+.env/*
+.vscode
+__pycache__
+cifar-10*
+.DS_Store
+final
+*.pdf
+*.zip
+
+#hw1
+CS280_Spring24_hw1/README.md
