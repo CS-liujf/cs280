@@ -2,8 +2,7 @@ from builtins import range
 import numpy as np
 
 
-
-def affine_forward(x, w, b):
+def affine_forward(x: np.ndarray, w: np.ndarray, b: np.ndarray):
     """
     Computes the forward pass for an affine (fully-connected) layer.
 
@@ -27,8 +26,9 @@ def affine_forward(x, w, b):
     # will need to reshape the input into rows.                               #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+ 
+    temp = x.reshape([x.shape[0], w.shape[0]])
+    out: np.ndarray = np.dot(temp, w)+b
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -38,7 +38,7 @@ def affine_forward(x, w, b):
     return out, cache
 
 
-def affine_backward(dout, cache):
+def affine_backward(dout:np.ndarray, cache:tuple[np.ndarray,np.ndarray,np.ndarray]):
     """
     Computes the backward pass for an affine layer.
 
@@ -61,7 +61,16 @@ def affine_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # dx=dL/d_x=dL/d_out*d_out/d_x=dout*w
+    dx: np.ndarray = np.dot(dout, w.T)
+    dx = dx.reshape(x.shape)
+
+    # dw=dL/d_w=dout*x
+    temp = x.reshape([x.shape[0], w.shape[0]])
+    dw: np.ndarray = np.dot(dout.T, temp).T
+
+    # db=dout*d_out/d_b
+    db: np.ndarray = np.sum(dout, axis=0)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -70,7 +79,7 @@ def affine_backward(dout, cache):
     return dx, dw, db
 
 
-def relu_forward(x):
+def relu_forward(x:np.ndarray):
     """
     Computes the forward pass for a layer of rectified linear units (ReLUs).
 
@@ -87,7 +96,7 @@ def relu_forward(x):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    out:np.ndarray = np.maximum(x, 0)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -114,7 +123,8 @@ def relu_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    dout[np.where(x < 0)] = 0
+    dx = dout
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -777,7 +787,7 @@ def svm_loss(x, y):
     return loss, dx
 
 
-def softmax_loss(x, y):
+def softmax_loss(x: np.ndarray, y: np.ndarray) -> tuple[float, np.ndarray]:
     """
     Computes the loss and gradient for softmax classification.
 

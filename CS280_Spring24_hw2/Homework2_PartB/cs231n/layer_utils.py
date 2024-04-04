@@ -7,7 +7,7 @@ from .layers import *
 from .fast_layers import *
 
 
-def affine_relu_forward(x, w, b):
+def affine_relu_forward(x:np.ndarray, w:np.ndarray, b:np.ndarray):
     """
     Convenience layer that perorms an affine transform followed by a ReLU
 

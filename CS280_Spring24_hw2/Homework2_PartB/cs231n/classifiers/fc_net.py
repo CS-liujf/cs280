@@ -5,6 +5,10 @@ import numpy as np
 from ..layers import *
 from ..layer_utils import *
 
+from typing import Literal
+
+TwoLayerParamsDict = dict[Literal['W1', 'W2', 'b1', 'b2'], np.ndarray]
+
 
 class TwoLayerNet(object):
     """
@@ -41,7 +45,7 @@ class TwoLayerNet(object):
           initialization of the weights.
         - reg: Scalar giving L2 regularization strength.
         """
-        self.params = {}
+        self.params: TwoLayerParamsDict = {}
         self.reg = reg
 
         ############################################################################
@@ -55,14 +59,19 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        self.params['W1'] = np.random.normal(
+            0.0, weight_scale, (input_dim, hidden_dim))
+        self.params['b1'] = np.zeros(hidden_dim)
+        self.params['W2'] = np.random.normal(
+            0.0, weight_scale, (hidden_dim, num_classes))
+        self.params['b2'] = np.zeros(num_classes)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
 
-    def loss(self, X, y=None):
+    def loss(self, X: np.ndarray, y: None | np.ndarray = None):
         """
         Compute loss and gradient for a minibatch of data.
 
@@ -88,7 +97,10 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        hidden_activation, hidden_cache = affine_relu_forward(
+            X, self.params["W1"], self.params["b1"])
+        scores, scores_cache = affine_forward(
+            hidden_activation, self.params["W2"], self.params["b2"])
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -99,7 +111,8 @@ class TwoLayerNet(object):
         if y is None:
             return scores
 
-        loss, grads = 0, {}
+        loss = 0
+        grads: TwoLayerParamsDict = {}
         ############################################################################
         # TODO: Implement the backward pass for the two-layer net. Store the loss  #
         # in the loss variable and gradients in the grads dictionary. Compute data #
@@ -112,7 +125,22 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        loss, grad_scores = softmax_loss(scores, y)
+
+        # L2regularization
+        loss += 0.5*self.reg*np.sum(self.params["W1"]**2)
+        loss += 0.5*self.reg*np.sum(self.params["W2"]**2)
+
+        # gradient of L2
+        grad_hidden, grad_W, grad_b = affine_backward(
+            grad_scores, scores_cache)
+        grads["W2"] = grad_W + self.reg * self.params['W2']
+        grads["b2"] = grad_b
+
+        # gradient of L1
+        _, grad_W, grad_b = affine_relu_backward(grad_hidden, hidden_cache)
+        grads["W1"] = grad_W + self.reg * self.params['W1']
+        grads["b1"] = grad_b
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -215,7 +243,8 @@ class FullyConnectedNet(object):
         # pass of the second batch normalization layer, etc.
         self.bn_params = []
         if self.normalization == "batchnorm":
-            self.bn_params = [{"mode": "train"} for i in range(self.num_layers - 1)]
+            self.bn_params = [{"mode": "train"}
+                              for i in range(self.num_layers - 1)]
         if self.normalization == "layernorm":
             self.bn_params = [{} for i in range(self.num_layers - 1)]
 
