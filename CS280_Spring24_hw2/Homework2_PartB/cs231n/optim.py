@@ -108,7 +108,8 @@ def rmsprop(w, dw, config=None):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    config['cache'] = config['decay_rate'] * config['cache'] + (1 - config['decay_rate']) * dw * dw
+    next_w = w - config['learning_rate'] * dw / (np.sqrt(config['cache']) + config['epsilon'])
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -118,7 +119,7 @@ def rmsprop(w, dw, config=None):
     return next_w, config
 
 
-def adam(w, dw, config=None):
+def adam(w:np.ndarray, dw:np.ndarray, config=None):
     """
     Uses the Adam update rule, which incorporates moving averages of both the
     gradient and its square and a bias correction term.
@@ -153,7 +154,12 @@ def adam(w, dw, config=None):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    config['m'] = config['beta1'] * config['m'] + (1 - config['beta1']) * dw
+    config['v'] = config['beta2'] * config['v'] + (1 - config['beta2']) * (dw**2)
+    config['t'] += 1
+    m_unbiased = config['m'] / (1 - config['beta1'] ** config['t'])
+    v_unbiased = config['v'] / (1 - config['beta2'] ** config['t'])
+    next_w = w - config['learning_rate'] * m_unbiased / (np.sqrt(v_unbiased) + config['epsilon'])
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
