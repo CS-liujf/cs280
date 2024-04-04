@@ -45,7 +45,7 @@ def sgd(w, dw, config=None):
     return w, config
 
 
-def sgd_momentum(w, dw, config=None):
+def sgd_momentum(w:np.ndarray, dw:np.ndarray, config=None):
     """
     Performs stochastic gradient descent with momentum.
 
@@ -69,7 +69,8 @@ def sgd_momentum(w, dw, config=None):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    v = config['momentum'] * v - config['learning_rate'] * dw
+    next_w = w + v
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
