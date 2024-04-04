@@ -5,7 +5,7 @@ import numpy as np
 from ..layers import *
 from ..layer_utils import *
 
-from typing import Literal
+from typing import Any, List, Literal, Tuple, Union
 
 TwoLayerParamsDict = dict[Literal['W1', 'W2', 'b1', 'b2'], np.ndarray]
 
@@ -168,11 +168,11 @@ class FullyConnectedNet(object):
 
     def __init__(
         self,
-        hidden_dims,
+        hidden_dims: list[int],
         input_dim=3 * 32 * 32,
         num_classes=10,
         dropout=1,
-        normalization=None,
+        normalization: Literal["batchnorm", "layernorm"] | None = None,
         reg=0.0,
         weight_scale=1e-2,
         dtype=np.float32,
@@ -204,7 +204,7 @@ class FullyConnectedNet(object):
         self.reg = reg
         self.num_layers = 1 + len(hidden_dims)
         self.dtype = dtype
-        self.params = {}
+        self.params: dict[str, np.ndarray] = {}
 
         ############################################################################
         # TODO: Initialize the parameters of the network, storing all values in    #
@@ -220,7 +220,15 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        dims_list = [input_dim]+hidden_dims+[num_classes]
+        for layer in range(1, self.num_layers+1):
+            self.params[f'W{layer}'] = np.random.normal(
+                0.0, weight_scale, (dims_list[layer-1], dims_list[layer]))
+
+            self.params[f'b{layer}'] = np.zeros(dims_list[layer])
+            if self.normalization and self.normalization == "batchnorm":
+                self.params[f'gamma{layer}'] = np.ones(dims_list[layer])
+                self.params[f'beta{layer}'] = np.zeros(dims_list[layer])
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -252,7 +260,7 @@ class FullyConnectedNet(object):
         for k, v in self.params.items():
             self.params[k] = v.astype(dtype)
 
-    def loss(self, X, y=None):
+    def loss(self, X: np.ndarray, y: None | np.ndarray = None):
         """
         Compute loss and gradient for the fully-connected net.
 
@@ -282,16 +290,33 @@ class FullyConnectedNet(object):
         # layer, etc.                                                              #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        output_list: list[np.ndarray] = [X]
+        cache_list:list[Any] = [(),]
+        for layer in range(1, self.num_layers+1):
+            if layer == self.num_layers:
+                activation, cache = affine_forward(
+                    output_list[-1], self.params[f'W{layer}'], self.params[f'b{layer}'])
+                output_list.append(activation)  # as the next input
+                cache_list.append(cache)
+            else:
+                if self.normalization and self.normalization == "batchnorm":
+                    pass
+                elif self.use_dropout:
+                    pass
+                else:
+                    activation, cache = affine_relu_forward(
+                        output_list[-1], self.params[f'W{layer}'], self.params[f'b{layer}'])
+                    output_list.append(activation)  # as the next input
+                    cache_list.append(cache)
 
-        pass
-
+        scores = output_list[-1]
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
 
         # If test mode return early
-        if mode == "test":
+        if mode == "test" or y is None:
             return scores
 
         loss, grads = 0.0, {}
@@ -310,7 +335,22 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        loss, grad_upstream = softmax_loss(scores, y)
+        for layer in range(self.num_layers, 0, -1):
+            if layer == self.num_layers:
+                grad_upstream, grads[f'W{layer}'], grads[f'b{layer}'] = affine_backward(
+                    grad_upstream, cache_list[layer])
+            else:
+                if self.normalization and self.normalization == "batchnorm":
+                    pass
+                elif self.use_dropout:
+                    pass
+                else:
+                    grad_upstream, grads[f'W{layer}'], grads[f'b{layer}'] = affine_relu_backward(
+                        grad_upstream, cache_list[layer])
+
+            loss += 0.5 * self.reg * np.sum(self.params[f'W{layer}']**2)
+            grads[f'W{layer}'] += self.reg * self.params[f'W{layer}']
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
