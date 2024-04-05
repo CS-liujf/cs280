@@ -226,7 +226,7 @@ class FullyConnectedNet(object):
                 0.0, weight_scale, (dims_list[layer-1], dims_list[layer]))
 
             self.params[f'b{layer}'] = np.zeros(dims_list[layer])
-            if self.normalization and self.normalization == "batchnorm":
+            if self.normalization == "batchnorm" and layer != self.num_layers:
                 self.params[f'gamma{layer}'] = np.ones(dims_list[layer])
                 self.params[f'beta{layer}'] = np.zeros(dims_list[layer])
 
@@ -249,7 +249,7 @@ class FullyConnectedNet(object):
         # normalization layer. You should pass self.bn_params[0] to the forward pass
         # of the first batch normalization layer, self.bn_params[1] to the forward
         # pass of the second batch normalization layer, etc.
-        self.bn_params = []
+        self.bn_params: list[Bn_Param_Dict] = []
         if self.normalization == "batchnorm":
             self.bn_params = [{"mode": "train"}
                               for i in range(self.num_layers - 1)]
@@ -259,6 +259,19 @@ class FullyConnectedNet(object):
         # Cast all parameters to the correct datatype
         for k, v in self.params.items():
             self.params[k] = v.astype(dtype)
+
+    def __affine_bn_relu_forward(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, gamma: np.ndarray, beta: np.ndarray, bn_param: Bn_Param_Dict):
+        a, fc_cache = affine_forward(x, w, b)
+        bn_out, bn_cache = batchnorm_forward(a, gamma, beta, bn_param)
+        relu_out, relu_cache = relu_forward(bn_out)
+        return relu_out, (fc_cache, bn_cache, relu_cache)
+
+    def __affine_bn_relu_backward(self, dout: np.ndarray, cache):
+        affine_cache, bn_cache, relu_cache = cache
+        grad_bn = relu_backward(dout, relu_cache)
+        grad_y, grad_gamma, grad_beta = batchnorm_backward(grad_bn, bn_cache)
+        dx, dw, db = affine_backward(grad_y, affine_cache)
+        return dx, dw, db, grad_gamma, grad_beta
 
     def loss(self, X: np.ndarray, y: None | np.ndarray = None):
         """
@@ -291,7 +304,7 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         output_list: list[np.ndarray] = [X]
-        cache_list:list[Any] = []
+        cache_list: list[Any] = []
         for layer in range(1, self.num_layers+1):
             if layer == self.num_layers:
                 activation, cache = affine_forward(
@@ -299,8 +312,16 @@ class FullyConnectedNet(object):
                 output_list.append(activation)  # as the next input
                 cache_list.append(cache)
             else:
-                if self.normalization and self.normalization == "batchnorm":
-                    pass
+                if self.normalization == "batchnorm":
+                    activation, cache = self.__affine_bn_relu_forward(
+                        output_list[-1],
+                        self.params[f'W{layer}'],
+                        self.params[f'b{layer}'],
+                        self.params[f'gamma{layer}'],
+                        self.params[f'beta{layer}'],
+                        self.bn_params[layer - 1])
+                    output_list.append(activation)
+                    cache_list.append(cache)
                 elif self.use_dropout:
                     pass
                 else:
@@ -341,8 +362,9 @@ class FullyConnectedNet(object):
                 grad_upstream, grads[f'W{layer}'], grads[f'b{layer}'] = affine_backward(
                     grad_upstream, cache_list[layer-1])
             else:
-                if self.normalization and self.normalization == "batchnorm":
-                    pass
+                if self.normalization == "batchnorm":
+                    grad_upstream, grads[f'W{layer}'], grads[f'b{layer}'], grads[f'gamma{layer}'], grads[f'beta{layer}'] = self.__affine_bn_relu_backward(
+                        grad_upstream, cache_list[layer-1])
                 elif self.use_dropout:
                     pass
                 else:
