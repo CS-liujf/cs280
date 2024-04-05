@@ -291,7 +291,7 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         output_list: list[np.ndarray] = [X]
-        cache_list:list[Any] = [(),]
+        cache_list:list[Any] = []
         for layer in range(1, self.num_layers+1):
             if layer == self.num_layers:
                 activation, cache = affine_forward(
@@ -339,7 +339,7 @@ class FullyConnectedNet(object):
         for layer in range(self.num_layers, 0, -1):
             if layer == self.num_layers:
                 grad_upstream, grads[f'W{layer}'], grads[f'b{layer}'] = affine_backward(
-                    grad_upstream, cache_list[layer])
+                    grad_upstream, cache_list[layer-1])
             else:
                 if self.normalization and self.normalization == "batchnorm":
                     pass
@@ -347,7 +347,7 @@ class FullyConnectedNet(object):
                     pass
                 else:
                     grad_upstream, grads[f'W{layer}'], grads[f'b{layer}'] = affine_relu_backward(
-                        grad_upstream, cache_list[layer])
+                        grad_upstream, cache_list[layer-1])
 
             loss += 0.5 * self.reg * np.sum(self.params[f'W{layer}']**2)
             grads[f'W{layer}'] += self.reg * self.params[f'W{layer}']
