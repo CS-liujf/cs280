@@ -272,6 +272,20 @@ class FullyConnectedNet(object):
         grad_y, grad_gamma, grad_beta = batchnorm_backward(grad_bn, bn_cache)
         dx, dw, db = affine_backward(grad_y, affine_cache)
         return dx, dw, db, grad_gamma, grad_beta
+    
+
+    def __affine_relu_dropout_forward(self,x:np.ndarray, w:np.ndarray, b:np.ndarray, dropout_param:Dr_Param_Dict):
+        a, fc_cache = affine_forward(x, w, b)
+        relu_out, relu_cache = relu_forward(a)
+        dropout_out, dropout_cache = dropout_forward(relu_out, dropout_param)
+        return dropout_out, (fc_cache, relu_cache, dropout_cache)
+    
+    def __affine_relu_dropout_backward(self,dout, cache):
+        affine_cache, relu_cache, dropout_cache = cache
+        grad_relu = dropout_backward(dout, dropout_cache)
+        grad_affine = relu_backward(grad_relu, relu_cache)
+        dx, dw, db = affine_backward(grad_affine, affine_cache)
+        return dx, dw, db
 
     def loss(self, X: np.ndarray, y: None | np.ndarray = None):
         """
@@ -323,7 +337,13 @@ class FullyConnectedNet(object):
                     output_list.append(activation)
                     cache_list.append(cache)
                 elif self.use_dropout:
-                    pass
+                    activation, cache = self.__affine_relu_dropout_forward(
+                        output_list[-1],
+                        self.params[f'W{layer}'],
+                        self.params[f'b{layer}'],
+                        self.dropout_param)
+                    output_list.append(activation)  # as the next input
+                    cache_list.append(cache)
                 else:
                     activation, cache = affine_relu_forward(
                         output_list[-1], self.params[f'W{layer}'], self.params[f'b{layer}'])
@@ -366,7 +386,8 @@ class FullyConnectedNet(object):
                     grad_upstream, grads[f'W{layer}'], grads[f'b{layer}'], grads[f'gamma{layer}'], grads[f'beta{layer}'] = self.__affine_bn_relu_backward(
                         grad_upstream, cache_list[layer-1])
                 elif self.use_dropout:
-                    pass
+                    grad_upstream, grads[f'W{layer}'], grads[f'b{layer}'] = self.__affine_relu_dropout_backward(
+                        grad_upstream, cache_list[layer-1])
                 else:
                     grad_upstream, grads[f'W{layer}'], grads[f'b{layer}'] = affine_relu_backward(
                         grad_upstream, cache_list[layer-1])
