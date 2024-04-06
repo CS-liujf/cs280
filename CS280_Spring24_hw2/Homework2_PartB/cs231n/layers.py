@@ -481,7 +481,18 @@ def layernorm_backward(dout: np.ndarray, cache: Ln_Cache) -> tuple[np.ndarray, n
     return dx, dgamma, dbeta
 
 
-def dropout_forward(x, dropout_param):
+class Dr_Param_Dict(TypedDict):
+    p: float
+    mode: Literal['train', 'test']
+    seed: NotRequired[int]
+
+
+X_under_Mask = np.ndarray
+Dr_Mask = np.ndarray | None
+Dr_Cache =  tuple[Dr_Param_Dict, Dr_Mask]
+
+
+def dropout_forward(x:np.ndarray, dropout_param: Dr_Param_Dict) -> tuple[X_under_Mask, Dr_Cache]:
     """
     Performs the forward pass for (inverted) dropout.
 
@@ -521,7 +532,9 @@ def dropout_forward(x, dropout_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        mask = (np.random.rand(x.shape[0], x.shape[1]) > p) / (1.0 - p)
+        out = x*mask
+
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
@@ -533,20 +546,20 @@ def dropout_forward(x, dropout_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        out = x
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
         #                            END OF YOUR CODE                         #
         #######################################################################
 
-    cache = (dropout_param, mask)
+    cache:Dr_Cache = (dropout_param, mask)
     out = out.astype(x.dtype, copy=False)
 
     return out, cache
 
 
-def dropout_backward(dout, cache):
+def dropout_backward(dout:np.ndarray, cache:Dr_Cache)->np.ndarray:
     """
     Perform the backward pass for (inverted) dropout.
 
@@ -558,13 +571,13 @@ def dropout_backward(dout, cache):
     mode = dropout_param["mode"]
 
     dx = None
-    if mode == "train":
+    if mode == "train" and mask is not None:
         #######################################################################
         # TODO: Implement training phase backward pass for inverted dropout   #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        dx:np.ndarray = dout * mask
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
