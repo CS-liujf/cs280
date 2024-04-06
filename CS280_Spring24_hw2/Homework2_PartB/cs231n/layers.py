@@ -657,7 +657,7 @@ def conv_forward_naive(x: np.ndarray, w: np.ndarray, b: np.ndarray, conv_param: 
     return out, cache
 
 
-def conv_backward_naive(dout:np.ndarray, cache:tuple[np.ndarray,np.ndarray,np.ndarray,Conv_Param_Dict]):
+def conv_backward_naive(dout: np.ndarray, cache: tuple[np.ndarray, np.ndarray, np.ndarray, Conv_Param_Dict]):
     """
     A naive implementation of the backward pass for a convolutional layer.
 
@@ -699,16 +699,14 @@ def conv_backward_naive(dout:np.ndarray, cache:tuple[np.ndarray,np.ndarray,np.nd
                     h_end = h_start + H_F
                     w_start = j*stride
                     w_end = w_start + W_F
-                    grad_x_padded[n, :, h_start:h_end, w_start:w_end]+=w[f]*dout[n,f,i,j]
+                    grad_x_padded[n, :, h_start:h_end,
+                                  w_start:w_end] += w[f]*dout[n, f, i, j]
                     subset = x_padded[n, :, h_start:h_end, w_start:w_end]
-                    dw[f] += subset*dout[n,f,i,j]
+                    dw[f] += subset*dout[n, f, i, j]
                     db[f] += dout[n, f, i, j]
-
 
     dx = grad_x_padded[:, :, pad:-pad, pad:-pad]
     return dx, dw, db
-
-
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -717,7 +715,13 @@ def conv_backward_naive(dout:np.ndarray, cache:tuple[np.ndarray,np.ndarray,np.nd
     return dx, dw, db
 
 
-def max_pool_forward_naive(x, pool_param):
+class Pool_Param_Dict(TypedDict):
+    pool_height: int
+    pool_width: int
+    stride: int
+
+
+def max_pool_forward_naive(x: np.ndarray, pool_param: Pool_Param_Dict):
     """
     A naive implementation of the forward pass for a max-pooling layer.
 
@@ -742,7 +746,25 @@ def max_pool_forward_naive(x, pool_param):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N, C, H, W = x.shape
+    pool_height = pool_param['pool_height']
+    pool_width = pool_param['pool_width']
+    stride = pool_param['stride']
+    H_out = (H - pool_height) // stride + 1
+    W_out = (W - pool_width) // stride + 1
+
+    out = np.zeros([N, C, H_out, W_out])
+
+    for n in range(N):
+        for c in range(C):
+            for i in range(H_out):
+                for j in range(W_out):
+                    h_start = i*stride
+                    h_end = h_start + pool_height
+                    w_start = j*stride
+                    w_end = w_start + pool_width
+                    subset = x[n, c, h_start:h_end, w_start:w_end]
+                    out[n, c, i, j] = np.max(subset)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -752,7 +774,7 @@ def max_pool_forward_naive(x, pool_param):
     return out, cache
 
 
-def max_pool_backward_naive(dout, cache):
+def max_pool_backward_naive(dout: np.ndarray, cache: tuple[np.ndarray, Pool_Param_Dict]):
     """
     A naive implementation of the backward pass for a max-pooling layer.
 
@@ -769,7 +791,27 @@ def max_pool_backward_naive(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    x, pool_param = cache
+    N, C, H, W = x.shape
+    pool_height = pool_param['pool_height']
+    pool_width = pool_param['pool_width']
+    stride = pool_param['stride']
+    H_out = (H - pool_height) // stride + 1
+    W_out = (W - pool_width) // stride + 1
+    dx = np.zeros_like(x)
+    for n in range(N):
+        for c in range(C):
+            for i in range(H_out):
+                for j in range(W_out):
+                    h_start = i*stride
+                    h_end = h_start + pool_height
+                    w_start = j*stride
+                    w_end = w_start + pool_width
+
+                    x_subset = x[n, c, h_start:h_end, w_start:w_end]
+                    h_i, w_j = np.unravel_index(
+                        x_subset.argmax(), x_subset.shape)
+                    dx[n, c, h_start + h_i, w_start + w_j] = dout[n, c, i, j]
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
