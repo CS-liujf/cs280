@@ -280,8 +280,8 @@ def batchnorm_backward(dout: np.ndarray, cache: Bn_Cache):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     x, gamma, eps = cache
-    batch_mean:np.ndarray = np.mean(x, axis=0)
-    batch_var:np.ndarray = np.var(x, axis=0)
+    batch_mean: np.ndarray = np.mean(x, axis=0)
+    batch_var: np.ndarray = np.var(x, axis=0)
     x_hat = (x - batch_mean) / np.sqrt(batch_var+eps)  # normalize
     N, D = dout.shape
 
@@ -292,23 +292,22 @@ def batchnorm_backward(dout: np.ndarray, cache: Bn_Cache):
 
     grad_x1 = grad_x_hat/np.sqrt(batch_var+eps)
 
-    grad_var= np.sum(grad_x_hat*(x-batch_mean),axis=0)*(-1/2)/(np.sqrt(batch_var+eps)**3)
-    grad_mu1=np.sum(grad_x_hat*(-1)/np.sqrt(batch_var+eps))
-    grad_mu2=grad_var*np.sum(-2*(x-batch_mean))/N
-    grad_mean=grad_mu1+grad_mu2
+    grad_var = np.sum(grad_x_hat*(x-batch_mean), axis=0) * \
+        (-1/2)/(np.sqrt(batch_var+eps)**3)
+    grad_mu1 = np.sum(grad_x_hat*(-1)/np.sqrt(batch_var+eps))
+    grad_mu2 = grad_var*np.sum(-2*(x-batch_mean))/N
+    grad_mean = grad_mu1+grad_mu2
 
-    grad_x2=grad_var*2*(x-batch_mean)/N
-    grad_x3=grad_mean/N*np.ones((N, D))
+    grad_x2 = grad_var*2*(x-batch_mean)/N
+    grad_x3 = grad_mean/N*np.ones((N, D))
     dx = np.sum(grad_x1+grad_x2+grad_x3)
 
-
     grad_mu1 = grad_x_hat / np.sqrt(batch_var+eps)
-    grad_mu2 =   np.ones((N, D))* grad_var* 2*(x - batch_mean) / N
+    grad_mu2 = np.ones((N, D)) * grad_var * 2*(x - batch_mean) / N
     grad_x1 = (grad_mu1 + grad_mu2)
     grad_mean = -1*np.sum(grad_mu1 + grad_mu2, axis=0)
     grad_x2 = np.ones((N, D)) * grad_mean / N
     dx = grad_x1 + grad_x2
-
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -365,7 +364,14 @@ def batchnorm_backward_alt(dout: np.ndarray, cache: Bn_Cache):
     return dx, dgamma, dbeta
 
 
-def layernorm_forward(x, gamma, beta, ln_param):
+class Ln_Param_Dict(TypedDict):
+    eps: NotRequired[float]
+
+
+Ln_Cache = tuple[np.ndarray, np.ndarray, float]
+
+
+def layernorm_forward(x: np.ndarray, gamma: np.ndarray, beta: np.ndarray, ln_param: Ln_Param_Dict):
     """
     Forward pass for layer normalization.
 
@@ -401,7 +407,11 @@ def layernorm_forward(x, gamma, beta, ln_param):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    feature_mean = np.mean(x, axis=1, keepdims=True)
+    feature_var = np.var(x, axis=1, keepdims=True)
+    x_hat = (x - feature_mean) / np.sqrt(feature_var + eps)
+    out = gamma * x_hat + beta
+    cache: Ln_Cache = x, gamma, eps
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -410,7 +420,7 @@ def layernorm_forward(x, gamma, beta, ln_param):
     return out, cache
 
 
-def layernorm_backward(dout, cache):
+def layernorm_backward(dout: np.ndarray, cache: Ln_Cache) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Backward pass for layer normalization.
 
@@ -436,7 +446,33 @@ def layernorm_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    x, gamma, eps = cache
+    x=x.T
+    dout=(dout*gamma)
+    gamma=gamma
+    N, D = dout.shape
+
+    feature_mean = np.mean(x, axis=1, keepdims=True)
+    feature_var = np.var(x, axis=1, keepdims=True)
+    x_hat = (x - feature_mean) / np.sqrt(feature_var + eps)
+
+    dbeta = np.sum(dout, axis=0)
+    dgamma = np.sum(dout.T * x_hat, axis=0)
+
+    grad_x_hat = dout*gamma
+    grad_var = np.sum(grad_x_hat.T*(x-feature_mean), axis=0) * \
+        (-1/2)/(np.sqrt(feature_var+eps)**3)
+    grad_mu1 = grad_x_hat / np.sqrt(feature_var+eps)
+    grad_mu2 = np.ones((N, D)) * grad_var * 2*(x - feature_mean) / N
+    grad_x1:np.ndarray = grad_mu1 + grad_mu2
+    grad_mean = -1*np.sum(grad_mu1 + grad_mu2, axis=0)
+    grad_x2:np.ndarray = np.ones((N, D)) * grad_mean / N
+    dx = (grad_x1 + grad_x2)
+
+    # _, batchnorm_cache = batchnorm_forward(x.T, np.ones(N), np.zeros(
+    #     N), {'mode': 'train', 'eps': eps, 'momentum': 123.0})
+    # d_x_T, _, _ = batchnorm_backward(grad_x_hat.T, batchnorm_cache)
+    # dx = d_x_T.T
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
