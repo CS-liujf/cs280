@@ -447,9 +447,9 @@ def layernorm_backward(dout: np.ndarray, cache: Ln_Cache) -> tuple[np.ndarray, n
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     x, gamma, eps = cache
-    x=x.T
-    dout=(dout*gamma)
-    gamma=gamma
+    x = x.T
+    dout = (dout*gamma)
+    gamma = gamma
     N, D = dout.shape
 
     feature_mean = np.mean(x, axis=1, keepdims=True)
@@ -464,9 +464,9 @@ def layernorm_backward(dout: np.ndarray, cache: Ln_Cache) -> tuple[np.ndarray, n
         (-1/2)/(np.sqrt(feature_var+eps)**3)
     grad_mu1 = grad_x_hat / np.sqrt(feature_var+eps)
     grad_mu2 = np.ones((N, D)) * grad_var * 2*(x - feature_mean) / N
-    grad_x1:np.ndarray = grad_mu1 + grad_mu2
+    grad_x1: np.ndarray = grad_mu1 + grad_mu2
     grad_mean = -1*np.sum(grad_mu1 + grad_mu2, axis=0)
-    grad_x2:np.ndarray = np.ones((N, D)) * grad_mean / N
+    grad_x2: np.ndarray = np.ones((N, D)) * grad_mean / N
     dx = (grad_x1 + grad_x2)
 
     # _, batchnorm_cache = batchnorm_forward(x.T, np.ones(N), np.zeros(
@@ -489,10 +489,10 @@ class Dr_Param_Dict(TypedDict):
 
 X_under_Mask = np.ndarray
 Dr_Mask = np.ndarray | None
-Dr_Cache =  tuple[Dr_Param_Dict, Dr_Mask]
+Dr_Cache = tuple[Dr_Param_Dict, Dr_Mask]
 
 
-def dropout_forward(x:np.ndarray, dropout_param: Dr_Param_Dict) -> tuple[X_under_Mask, Dr_Cache]:
+def dropout_forward(x: np.ndarray, dropout_param: Dr_Param_Dict) -> tuple[X_under_Mask, Dr_Cache]:
     """
     Performs the forward pass for (inverted) dropout.
 
@@ -535,7 +535,6 @@ def dropout_forward(x:np.ndarray, dropout_param: Dr_Param_Dict) -> tuple[X_under
         mask = (np.random.rand(x.shape[0], x.shape[1]) > p) / (1.0 - p)
         out = x*mask
 
-
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
         #                           END OF YOUR CODE                          #
@@ -553,13 +552,13 @@ def dropout_forward(x:np.ndarray, dropout_param: Dr_Param_Dict) -> tuple[X_under
         #                            END OF YOUR CODE                         #
         #######################################################################
 
-    cache:Dr_Cache = (dropout_param, mask)
+    cache: Dr_Cache = (dropout_param, mask)
     out = out.astype(x.dtype, copy=False)
 
     return out, cache
 
 
-def dropout_backward(dout:np.ndarray, cache:Dr_Cache)->np.ndarray:
+def dropout_backward(dout: np.ndarray, cache: Dr_Cache) -> np.ndarray:
     """
     Perform the backward pass for (inverted) dropout.
 
@@ -577,7 +576,7 @@ def dropout_backward(dout:np.ndarray, cache:Dr_Cache)->np.ndarray:
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        dx:np.ndarray = dout * mask
+        dx: np.ndarray = dout * mask
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
@@ -588,7 +587,12 @@ def dropout_backward(dout:np.ndarray, cache:Dr_Cache)->np.ndarray:
     return dx
 
 
-def conv_forward_naive(x, w, b, conv_param):
+class Conv_Param_Dict(TypedDict):
+    stride: int
+    pad: int
+
+
+def conv_forward_naive(x: np.ndarray, w: np.ndarray, b: np.ndarray, conv_param: Conv_Param_Dict):
     """
     A naive implementation of the forward pass for a convolutional layer.
 
@@ -623,7 +627,27 @@ def conv_forward_naive(x, w, b, conv_param):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    stride = conv_param['stride']
+    pad = conv_param['pad']
+    padding = [(0, 0), (0, 0), (pad, pad), (pad, pad)]
+    x_padded = np.pad(x, padding, mode='constant', constant_values=0)
+
+    N, _, H, W = x.shape
+    F, _, H_F, W_F = w.shape
+    H_out = (H + 2 * pad - H_F) // stride + 1
+    W_out = (W + 2 * pad - W_F) // stride + 1
+    out = np.zeros((N, F, H_out, W_out), x.dtype)
+
+    for n in range(N):
+        for f in range(F):
+            for i in range(H_out):
+                for j in range(W_out):
+                    h_start = i*stride
+                    h_end = h_start + H_F
+                    w_start = j*stride
+                    w_end = w_start + W_F
+                    subset = x_padded[n, :, h_start:h_end, w_start:w_end]
+                    out[n, f, i, j] = np.sum(subset*w[f])+b[f]
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -633,7 +657,7 @@ def conv_forward_naive(x, w, b, conv_param):
     return out, cache
 
 
-def conv_backward_naive(dout, cache):
+def conv_backward_naive(dout:np.ndarray, cache:tuple[np.ndarray,np.ndarray,np.ndarray,Conv_Param_Dict]):
     """
     A naive implementation of the backward pass for a convolutional layer.
 
@@ -652,7 +676,39 @@ def conv_backward_naive(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    x, w, b, conv_param = cache
+    stride = conv_param['stride']
+    pad = conv_param['pad']
+    padding = [(0, 0), (0, 0), (pad, pad), (pad, pad)]
+    x_padded = np.pad(x, padding, mode='constant', constant_values=0)
+    grad_x_padded = np.zeros_like(x_padded)
+
+    dw = np.zeros_like(w)
+    db = np.zeros((b.shape[0],))
+
+    N, _, H, W = x.shape
+    F, _, H_F, W_F = w.shape
+    H_out = (H + 2 * pad - H_F) // stride + 1
+    W_out = (W + 2 * pad - W_F) // stride + 1
+
+    for n in range(N):
+        for f in range(F):
+            for i in range(H_out):
+                for j in range(W_out):
+                    h_start = i*stride
+                    h_end = h_start + H_F
+                    w_start = j*stride
+                    w_end = w_start + W_F
+                    grad_x_padded[n, :, h_start:h_end, w_start:w_end]+=w[f]*dout[n,f,i,j]
+                    subset = x_padded[n, :, h_start:h_end, w_start:w_end]
+                    dw[f] += subset*dout[n,f,i,j]
+                    db[f] += dout[n, f, i, j]
+
+
+    dx = grad_x_padded[:, :, pad:-pad, pad:-pad]
+    return dx, dw, db
+
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
