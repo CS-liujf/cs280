@@ -79,7 +79,7 @@ def conv_bn_relu_backward(dout, cache):
     return dx, dw, db, dgamma, dbeta
 
 
-def conv_relu_pool_forward(x, w, b, conv_param, pool_param):
+def conv_relu_pool_forward(x:np.ndarray, w:np.ndarray, b:np.ndarray, conv_param:Conv_Param_Dict, pool_param:Pool_Param_Dict):
     """
     Convenience layer that performs a convolution, a ReLU, and a pool.
 

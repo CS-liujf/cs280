@@ -5,6 +5,9 @@ from ..layers import *
 from ..fast_layers import *
 from ..layer_utils import *
 
+ThreeLayerConvParamsDict = dict[Literal['W1',
+                                        'W2', 'W3', 'b1', 'b2', 'b3'], np.ndarray]
+
 
 class ThreeLayerConvNet(object):
     """
@@ -19,7 +22,7 @@ class ThreeLayerConvNet(object):
 
     def __init__(
         self,
-        input_dim=(3, 32, 32),
+        input_dim: tuple[int, int, int] = (3, 32, 32),
         num_filters=32,
         filter_size=7,
         hidden_dim=100,
@@ -42,7 +45,7 @@ class ThreeLayerConvNet(object):
         - reg: Scalar giving L2 regularization strength
         - dtype: numpy datatype to use for computation.
         """
-        self.params = {}
+        self.params: ThreeLayerConvParamsDict = {}
         self.reg = reg
         self.dtype = dtype
 
@@ -63,7 +66,20 @@ class ThreeLayerConvNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        pad = (filter_size - 1) // 2
+        C, H, W = input_dim
+        H_out = 1 + (H + 2 * pad - filter_size-1) // 2
+        W_out = 1 + (W + 2 * pad - filter_size-1) // 2
+
+        self.params['W1'] = np.random.normal(
+            0.0, weight_scale, (num_filters, C, filter_size, filter_size))
+        self.params['b1'] = np.zeros(num_filters)
+        self.params['W2'] = np.random.normal(
+            0.0, weight_scale, (num_filters*H_out * W_out, hidden_dim))
+        self.params['b2'] = np.zeros(hidden_dim)
+        self.params['W3'] = np.random.normal(
+            0.0, weight_scale, (hidden_dim, num_classes))
+        self.params['b3'] = np.zeros(num_classes)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -86,10 +102,12 @@ class ThreeLayerConvNet(object):
         # pass conv_param to the forward pass for the convolutional layer
         # Padding and stride chosen to preserve the input spatial size
         filter_size = W1.shape[2]
-        conv_param = {"stride": 1, "pad": (filter_size - 1) // 2}
+        conv_param: Conv_Param_Dict = {
+            "stride": 1, "pad": (filter_size - 1) // 2}
 
         # pass pool_param to the forward pass for the max-pooling layer
-        pool_param = {"pool_height": 2, "pool_width": 2, "stride": 2}
+        pool_param: Pool_Param_Dict = {
+            "pool_height": 2, "pool_width": 2, "stride": 2}
 
         scores = None
         ############################################################################
@@ -102,7 +120,11 @@ class ThreeLayerConvNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        conv_out, conv_cache = conv_relu_pool_forward(
+            X, W1, b1, conv_param, pool_param)
+        activation_out, activation_cache = affine_relu_forward(
+            conv_out, W2, b2)
+        scores, scores_cache = affine_forward(activation_out, W3, b3)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -125,11 +147,20 @@ class ThreeLayerConvNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        loss, d_scores = softmax_loss(scores, y)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
 
+        grad_hidden, grads['W3'], grads['b3'] = affine_backward(
+            d_scores, scores_cache)
+        grad_conv, grads['W2'], grads['b2'] = affine_relu_backward(
+            grad_hidden, activation_cache)
+        _, grads['W1'], grads['b1'] = conv_relu_pool_backward(
+            grad_conv, conv_cache)
+        loss += 0.5 * self.reg * (np.sum(self.params['W1']**2) +
+                                  np.sum(self.params['W2']**2) +
+                                  np.sum(self.params['W3']**2))
         return loss, grads
