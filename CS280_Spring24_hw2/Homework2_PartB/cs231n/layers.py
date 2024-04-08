@@ -853,7 +853,9 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    C = x.shape[1]
+    out_temp, cache = batchnorm_forward(x.transpose(0,2,3,1).reshape(-1, C), gamma, beta, bn_param) 
+    out = out_temp.reshape(x.shape[0], x.shape[2],x.shape[3], x.shape[1]).transpose(0,3,1,2)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -876,7 +878,7 @@ def spatial_batchnorm_backward(dout, cache):
     - dgamma: Gradient with respect to scale parameter, of shape (C,)
     - dbeta: Gradient with respect to shift parameter, of shape (C,)
     """
-    dx, dgamma, dbeta = None, None, None
+    dx, grad_gamma, grad_beta = None, None, None
 
     ###########################################################################
     # TODO: Implement the backward pass for spatial batch normalization.      #
@@ -887,14 +889,16 @@ def spatial_batchnorm_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    C = dout.shape[1]
+    grad_x_temp , grad_gamma, grad_beta = batchnorm_backward(dout.transpose(0,2,3,1).reshape(-1, C), cache) 
+    dx = grad_x_temp.reshape(dout.shape[0], dout.shape[2],dout.shape[3], dout.shape[1]).transpose(0,3,1,2)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
 
-    return dx, dgamma, dbeta
+    return dx, grad_gamma, grad_beta
 
 
 def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
