@@ -447,32 +447,24 @@ def layernorm_backward(dout: np.ndarray, cache: Ln_Cache) -> tuple[np.ndarray, n
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     x, gamma, eps = cache
-    x = x.T
-    dout = (dout*gamma)
-    gamma = gamma
-    N, D = dout.shape
-
+    N, _ = dout.shape
     feature_mean = np.mean(x, axis=1, keepdims=True)
     feature_var = np.var(x, axis=1, keepdims=True)
     x_hat = (x - feature_mean) / np.sqrt(feature_var + eps)
-
     dbeta = np.sum(dout, axis=0)
-    dgamma = np.sum(dout.T * x_hat, axis=0)
+    dgamma = np.sum(dout * x_hat, axis=0)
 
-    grad_x_hat = dout*gamma
-    grad_var = np.sum(grad_x_hat.T*(x-feature_mean), axis=0) * \
-        (-1/2)/(np.sqrt(feature_var+eps)**3)
-    grad_mu1 = grad_x_hat / np.sqrt(feature_var+eps)
-    grad_mu2 = np.ones((N, D)) * grad_var * 2*(x - feature_mean) / N
-    grad_x1: np.ndarray = grad_mu1 + grad_mu2
-    grad_mean = -1*np.sum(grad_mu1 + grad_mu2, axis=0)
-    grad_x2: np.ndarray = np.ones((N, D)) * grad_mean / N
-    dx = (grad_x1 + grad_x2)
+    x = x.T
+    dout = (dout*gamma).T
 
-    # _, batchnorm_cache = batchnorm_forward(x.T, np.ones(N), np.zeros(
-    #     N), {'mode': 'train', 'eps': eps, 'momentum': 123.0})
-    # d_x_T, _, _ = batchnorm_backward(grad_x_hat.T, batchnorm_cache)
-    # dx = d_x_T.T
+    feature_mean = np.mean(x, axis=0)
+    feature_var = np.var(x, axis=0)
+    x_hat = (x - feature_mean) / np.sqrt(feature_var+eps)  # normalize
+
+    grad_x_hat = dout*np.ones(N)
+
+    dx = ((N * grad_x_hat - np.sum(grad_x_hat, axis=0) - x_hat *
+          np.sum(grad_x_hat * x_hat, axis=0))/N/np.sqrt(feature_var + eps)).T
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -854,8 +846,10 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     C = x.shape[1]
-    out_temp, cache = batchnorm_forward(x.transpose(0,2,3,1).reshape(-1, C), gamma, beta, bn_param) 
-    out = out_temp.reshape(x.shape[0], x.shape[2],x.shape[3], x.shape[1]).transpose(0,3,1,2)
+    out_temp, cache = batchnorm_forward(x.transpose(
+        0, 2, 3, 1).reshape(-1, C), gamma, beta, bn_param)
+    out = out_temp.reshape(
+        x.shape[0], x.shape[2], x.shape[3], x.shape[1]).transpose(0, 3, 1, 2)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -890,8 +884,10 @@ def spatial_batchnorm_backward(dout, cache):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     C = dout.shape[1]
-    grad_x_temp , grad_gamma, grad_beta = batchnorm_backward(dout.transpose(0,2,3,1).reshape(-1, C), cache) 
-    dx = grad_x_temp.reshape(dout.shape[0], dout.shape[2],dout.shape[3], dout.shape[1]).transpose(0,3,1,2)
+    grad_x_temp, grad_gamma, grad_beta = batchnorm_backward(
+        dout.transpose(0, 2, 3, 1).reshape(-1, C), cache)
+    dx = grad_x_temp.reshape(
+        dout.shape[0], dout.shape[2], dout.shape[3], dout.shape[1]).transpose(0, 3, 1, 2)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
