@@ -1,0 +1,117 @@
+\documentclass[12pt]{article}%
+\usepackage{amsfonts}
+\usepackage{fancyhdr}
+\usepackage{comment}
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2.2cm, right=2.2cm]%
+{geometry}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage{changepage}
+\usepackage{amssymb}
+\usepackage{graphicx}%
+\setcounter{MaxMatrixCols}{30}
+\newtheorem{theorem}{Theorem}
+\newtheorem{acknowledgement}[theorem]{Acknowledgement}
+\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{axiom}{Axiom}
+\newtheorem{case}[theorem]{Case}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{conclusion}[theorem]{Conclusion}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{criterion}[theorem]{Criterion}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{exercise}[theorem]{Exercise}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{solution}[theorem]{Solution}
+\newtheorem{summary}[theorem]{Summary}
+\newenvironment{proof}[1][Proof]{\textbf{#1.} }{\ \rule{0.5em}{0.5em}}
+
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+
+\begin{document}
+
+\title{CS280 Spring 2024 Assignment 3 \\ Part A}
+\author{RNN, LSTM and GRU}
+\maketitle
+
+\paragraph{Name:}
+
+\paragraph{Student ID:}
+
+\newpage
+
+
+\subsubsection*{1. RNN (16 points)}
+Ronnie makes a simple RNN with state dimension 1 and a step function for $f_1$, so that
+$$s_t = \text{step}(w_1x_t+w_2s_{t-1}+b)$$
+where \[ \text{step}(z)=\left\{
+	\begin{array}{ll}
+	  1,\ z>0\\
+	  0,\ \text{otherwise}\\
+	\end{array}
+  \right. \] and the output $$y_t=s_t$$.
+
+\begin{itemize}
+	\item[(a)] Assuming $s_0 = 0$, what values of $w_1$, $w_2$ and $b$ would generate output sequence
+	$$[0, 0, 0, 1, 1, 1, 1]$$
+	given input sequence
+	$$[0, 0, 0, 1, 0, 1, 0]$$
+	\\\\\\\\\\\\\\
+	% Give your answer here.
+
+
+
+	\item[(b)] Now Ronnie wants to make their machine generate output sequence
+	$$[1, 1, 1, 0, 0, 0, 1, 1]$$
+	given input sequence
+	$$[0, 0, 0, 1, 0, 0, 1, 0]$$
+	Assuming $s_0 = 1$, provide the $s_t$ value for each possible combination of $x_t$ and $s_{t-1}$
+values, according to the input and output sequences in this example.
+\begin{center}
+	\begin{tabular}{|c|c|c|}  
+		\hline
+		$\ x_t\ $& $s_{t-1}$ &$\ s_t\ $\\ \hline
+		0&0& \\ \hline
+		0&1& \\ \hline
+		1&0& \\ \hline
+		1&1& \\ \hline
+		\end{tabular} 
+\end{center}
+
+\newpage
+		\item[(c)] Do you think it is possible to use Ronnie’s architecture to implement the mapping from the input sequence to the output sequence in question (b)?
+		If you answered \textbf{not possible}, explain why and describe a change to this architecture that
+		can implement this mapping. If you answered \textbf{possible}, provide the parameters $w_1$, $w_2$, and
+		$b$ required to implement this mapping.
+	\end{itemize}
+
+
+\newpage
+
+
+\subsubsection*{2. LSTM and GRU (17 points)}
+
+\begin{itemize}
+	\setlength{\itemsep}{-1pt}
+	\setlength{\parsep}{0pt}
+\setlength{\parskip}{0pt}
+	\item[(a)] Please describe the forward propagation process of LSTM, and analyze why LSTM can \\mitigate the vanishing and exploding gradient problems in vanilla RNN.\\
+	\item[(b)] Please describe the differences between LSTM and GRU.\\ 
+\end{itemize}
+\newpage
+
+
+
+
+
+\end{document}
