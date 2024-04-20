@@ -8,8 +8,9 @@ This file defines layer types that are commonly used for recurrent neural
 networks.
 """
 
+RNN_Step_Cache=tuple[np.ndarray,np.ndarray,np.ndarray,np.ndarray,np.ndarray]
 
-def rnn_step_forward(x, prev_h, Wx, Wh, b):
+def rnn_step_forward(x:np.ndarray, prev_h:np.ndarray, Wx:np.ndarray, Wh:np.ndarray, b:np.ndarray)->tuple[np.ndarray,RNN_Step_Cache]:
     """
     Run the forward pass for a single timestep of a vanilla RNN that uses a tanh
     activation function.
@@ -36,7 +37,8 @@ def rnn_step_forward(x, prev_h, Wx, Wh, b):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    next_h = np.tanh(x.dot(Wx) + prev_h.dot(Wh) + b)
+    cache: RNN_Step_Cache = (x, prev_h, Wx, Wh, b)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -45,7 +47,7 @@ def rnn_step_forward(x, prev_h, Wx, Wh, b):
     return next_h, cache
 
 
-def rnn_step_backward(dnext_h, cache):
+def rnn_step_backward(dnext_h:np.ndarray, cache:RNN_Step_Cache):
     """
     Backward pass for a single timestep of a vanilla RNN.
 
@@ -69,7 +71,16 @@ def rnn_step_backward(dnext_h, cache):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    x, prev_h, Wx, Wh, b = cache
+    next_h = np.tanh(x.dot(Wx) + prev_h.dot(Wh) + b)
+
+    grad_hidden_layer = dnext_h * (1.0 - next_h ** 2)
+    dx = grad_hidden_layer.dot(Wx.T)
+    dprev_h = grad_hidden_layer.dot(Wh.T)
+    dWx = x.T.dot(grad_hidden_layer)
+    dWh = prev_h.T.dot(grad_hidden_layer)
+    db = np.sum(grad_hidden_layer, axis=0)
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
