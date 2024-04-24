@@ -1,5 +1,6 @@
 from builtins import range
 from builtins import object
+from typing import Literal
 import numpy as np
 
 from ..layers import *
@@ -20,11 +21,11 @@ class CaptioningRNN(object):
 
     def __init__(
         self,
-        word_to_idx,
-        input_dim=512,
-        wordvec_dim=128,
-        hidden_dim=128,
-        cell_type="rnn",
+        word_to_idx:dict[str,int],
+        input_dim: int = 512,
+        wordvec_dim: int = 128,
+        hidden_dim: int = 128,
+        cell_type: Literal['rnn', 'lstm'] = "rnn",
         dtype=np.float32,
     ):
         """
@@ -81,7 +82,7 @@ class CaptioningRNN(object):
         for k, v in self.params.items():
             self.params[k] = v.astype(self.dtype)
 
-    def loss(self, features, captions):
+    def loss(self, features: np.ndarray, captions: np.ndarray):
         """
         Compute training-time loss for the RNN. We input image features and
         ground-truth captions for those images, and use an RNN (or LSTM) to compute
@@ -151,7 +152,27 @@ class CaptioningRNN(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        hidden_state, hidden_cache = affine_forward(features, W_proj, b_proj)
+        embed_captions_ground, embed_cache_ground = word_embedding_forward(
+            captions_in, W_embed)
+        if self.cell_type == 'rnn':
+          rnn_hidden, rnn_hidden_cache = rnn_forward(
+              embed_captions_ground, hidden_state, Wx, Wh, b)
+          vocab_scores, vocab_cache = temporal_affine_forward(
+              rnn_hidden, W_vocab, b_vocab)
+          loss, dscores = temporal_softmax_loss(
+              vocab_scores, captions_out, mask)
+          d_rnn_h, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(
+              dscores, vocab_cache)
+          d_embed_captions, grad_hidden, grads['Wx'], grads['Wh'], grads[
+              'b'] = rnn_backward(d_rnn_h, rnn_hidden_cache)
+        elif self.cell_type == 'lstm':
+            pass
+
+        grads['W_embed'] = word_embedding_backward(
+            d_embed_captions, embed_cache_ground)
+        _, grads['W_proj'], grads['b_proj'] = affine_backward(
+            grad_hidden, hidden_cache)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
