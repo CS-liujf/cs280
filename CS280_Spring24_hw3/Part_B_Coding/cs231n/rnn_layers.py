@@ -197,7 +197,10 @@ def rnn_backward(dh: np.ndarray, cache: RNN_Forward_Cache) -> tuple[np.ndarray, 
     return dx, dh0, dWx, dWh, db
 
 
-def word_embedding_forward(x, W):
+Word_Emdedding_Cache = tuple[np.ndarray, np.ndarray]
+
+
+def word_embedding_forward(x: np.ndarray, W: np.ndarray) -> tuple[np.ndarray, Word_Emdedding_Cache]:
     """
     Forward pass for word embeddings. We operate on minibatches of size N where
     each sequence has length T. We assume a vocabulary of V words, assigning each
@@ -220,7 +223,8 @@ def word_embedding_forward(x, W):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    out = W[x, :]
+    cache = (x, W)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -229,7 +233,7 @@ def word_embedding_forward(x, W):
     return out, cache
 
 
-def word_embedding_backward(dout, cache):
+def word_embedding_backward(dout: np.ndarray, cache: Word_Emdedding_Cache) -> np.ndarray:
     """
     Backward pass for word embeddings. We cannot back-propagate into the words
     since they are integers, so we only return gradient for the word embedding
@@ -253,7 +257,9 @@ def word_embedding_backward(dout, cache):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    x, W = cache
+    dW = np.zeros_like(W)
+    np.add.at(dW, x, dout)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
