@@ -48,7 +48,7 @@ class CaptioningRNN(object):
         self.dtype = dtype
         self.word_to_idx = word_to_idx
         self.idx_to_word = {i: w for w, i in word_to_idx.items()}
-        self.params = {}
+        self.params: dict[str, np.ndarray] = {}
 
         vocab_size = len(word_to_idx)
 
@@ -181,7 +181,7 @@ class CaptioningRNN(object):
 
         return loss, grads
 
-    def sample(self, features, max_length=30):
+    def sample(self, features: np.ndarray, max_length=30):
         """
         Run a test-time forward pass for the model, sampling captions for input
         feature vectors.
@@ -240,8 +240,21 @@ class CaptioningRNN(object):
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
-
+        H = Wh.shape[0]
+        prev_c = np.zeros((N, H))
+        prev_h, _ = affine_forward(features, W_proj, b_proj)
+        embed_curr_token = W_embed[[self._start] * N, :]
+        if self.cell_type == 'rnn':
+            pass
+        #   for t in range(max_length):
+        #     next_h, _ = rnn_step_forward(embed_curr_token, prev_h, Wx, Wh, b)
+        #     vocab_scores, _ = affine_forward(next_h, W_vocab, b_vocab)
+        #     words = np.argmax(vocab_scores, axis=1)
+        #     words[np.where(words == self._end)] = self._null
+        #     captions[:, t] = words
+        #     prev_h = next_h
+        elif self.cell_type == 'lstm':
+          pass
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
