@@ -268,7 +268,7 @@ def word_embedding_backward(dout: np.ndarray, cache: Word_Emdedding_Cache) -> np
     return dW
 
 
-def sigmoid(x):
+def sigmoid(x:np.ndarray)->np.ndarray:
     """
     A numerically stable version of the logistic sigmoid function.
     """
@@ -282,7 +282,11 @@ def sigmoid(x):
     return top / (1 + z)
 
 
-def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
+Lstm_Step_Cache = tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,
+                        np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+
+
+def lstm_step_forward(x: np.ndarray, prev_h: np.ndarray, prev_c: np.ndarray, Wx: np.ndarray, Wh: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray, Lstm_Step_Cache]:
     """
     Forward pass for a single timestep of an LSTM.
 
@@ -311,7 +315,15 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    a = x.dot(Wx) + prev_h.dot(Wh) + b
+    a_i, a_f, a_o, a_g = np.split(a, 4, axis=1)
+    i = sigmoid(a_i)
+    f = sigmoid(a_f)
+    o = sigmoid(a_o)
+    g = np.tanh(a_g)
+    next_c = f * prev_c + i * g
+    next_h = o * np.tanh(next_c)
+    cache:Lstm_Step_Cache = (x, prev_h, prev_c, Wx, Wh, b, a, i, f, o, g, next_c)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -321,7 +333,7 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
     return next_h, next_c, cache
 
 
-def lstm_step_backward(dnext_h, dnext_c, cache):
+def lstm_step_backward(dnext_h:np.ndarray, dnext_c:np.ndarray, cache:Lstm_Step_Cache):
     """
     Backward pass for a single timestep of an LSTM.
 
@@ -347,7 +359,28 @@ def lstm_step_backward(dnext_h, dnext_c, cache):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    x, prev_h, prev_c, Wx, Wh, b, a, i, f, o, g, next_c = cache
+    grad_o = dnext_h*np.tanh(next_c)
+    dnext_c = dnext_c+dnext_h*o*(1-np.tanh(next_c)**2)
+
+    dprev_c = dnext_c*f
+    grad_i = dnext_c*g
+    grad_f = dnext_c*prev_c
+    grad_g = dnext_c*i
+
+    grad_a_i = grad_i*i*(1-i)
+    grad_a_f = grad_f*f*(1-f)
+    grad_a_o = grad_o*o*(1-o)
+    grad_a_g = grad_g*(1-g**2)
+
+    grad_a = np.concatenate([grad_a_i, grad_a_f, grad_a_o, grad_a_g], axis=1)
+
+    dx = grad_a.dot(Wx.T)
+    dWx: np.ndarray = np.dot(x.T, grad_a)
+    dprev_h: np.ndarray = np.dot(Wh, grad_a.T).T
+    dWh: np.ndarray = np.dot(prev_h.T, grad_a)
+    db: np.ndarray = np.sum(grad_a, axis=0)
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
