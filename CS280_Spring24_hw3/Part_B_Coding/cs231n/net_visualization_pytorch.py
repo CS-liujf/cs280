@@ -101,7 +101,7 @@ def make_fooling_image(X:torch.Tensor, target_y:int, model:torch.nn.Module):
     ##############################################################################
     return X_fooling
 
-def class_visualization_update_step(img, model, target_y, l2_reg, learning_rate):
+def class_visualization_update_step(img:torch.Tensor, model:torch.nn.Module, target_y:int, l2_reg:float, learning_rate:float):
     ########################################################################
     # TODO: Use the model to compute the gradient of the score for the     #
     # class target_y with respect to the pixels of the image, and make a   #
@@ -111,7 +111,15 @@ def class_visualization_update_step(img, model, target_y, l2_reg, learning_rate)
     ########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    scores = model(img)
+    loss = scores[0, target_y] - l2_reg * torch.norm(img)
+    loss.backward()
+
+    grads_norm:torch.Tensor = img.grad / img.grad.norm()
+    img.data += learning_rate * grads_norm
+    img.grad.zero_()
+
+    return img
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ########################################################################
