@@ -390,7 +390,10 @@ def lstm_step_backward(dnext_h:np.ndarray, dnext_c:np.ndarray, cache:Lstm_Step_C
     return dx, dprev_h, dprev_c, dWx, dWh, db
 
 
-def lstm_forward(x, h0, Wx, Wh, b):
+LSTM_Forward_Cache = tuple[np.ndarray, list[Lstm_Step_Cache]]
+
+
+def lstm_forward(x: np.ndarray, h0: np.ndarray, Wx: np.ndarray, Wh: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, LSTM_Forward_Cache]:
     """
     Forward pass for an LSTM over an entire sequence of data. We assume an input
     sequence composed of T vectors, each of dimension D. The LSTM uses a hidden
@@ -419,7 +422,25 @@ def lstm_forward(x, h0, Wx, Wh, b):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N, T, _ = x.shape
+    H = Wh.shape[0]
+    h = np.zeros((N, T, H))
+    prev_h = h0
+    prev_c = np.zeros((N, H))
+    step_caches: list[Lstm_Step_Cache] = []
+
+    for t in range(T):
+        next_h, next_c, step_cache = lstm_step_forward(
+            x[:, t, :], prev_h, prev_c, Wx, Wh, b)
+
+        h[:, t, :] = next_h
+        prev_h = next_h
+        prev_c = next_c
+        step_caches.append(step_cache)
+
+    cache: LSTM_Forward_Cache = (Wx, step_caches)
+    
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -429,7 +450,7 @@ def lstm_forward(x, h0, Wx, Wh, b):
     return h, cache
 
 
-def lstm_backward(dh, cache):
+def lstm_backward(dh: np.ndarray, cache: LSTM_Forward_Cache) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Backward pass for an LSTM over an entire sequence of data.]
 
@@ -451,7 +472,27 @@ def lstm_backward(dh, cache):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    Wx, step_caches = cache
+    D = Wx.shape[0]
+    N, T, H = dh.shape
+    dx = np.zeros((N, T, D))
+    dh0 = np.zeros((N, H))
+    dWx = np.zeros((D, 4 * H))
+    dWh = np.zeros((H, 4 * H))
+    db = np.zeros((4 * H,))
+    dnext_c = np.zeros((N, H))
+    dprev_h = np.zeros((N, H))
+
+    for t in reversed(range(T)):
+        dnext_h = dh[:, t, :]+dprev_h
+        dx[:, t, :], dprev_h, dprev_c, dWx_t, dWh_t, db_t = lstm_step_backward(
+            dnext_h, dnext_c, step_caches[t])
+        dWx += dWx_t
+        dWh += dWh_t
+        db += db_t
+        dnext_c = dprev_c
+
+    dh0 = dprev_h
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
