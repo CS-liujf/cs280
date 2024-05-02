@@ -167,7 +167,16 @@ class CaptioningRNN(object):
           d_embed_captions, grad_hidden, grads['Wx'], grads['Wh'], grads[
               'b'] = rnn_backward(d_rnn_h, rnn_hidden_cache)
         elif self.cell_type == 'lstm':
-            pass
+          lstm_hidden, lstm_hidden_cache = lstm_forward(
+              embed_captions_ground, hidden_state, Wx, Wh, b)
+          vocab_scores, vocab_cache = temporal_affine_forward(
+              lstm_hidden, W_vocab, b_vocab)
+          loss, dscores = temporal_softmax_loss(
+              vocab_scores, captions_out, mask)
+          d_rnn_h, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(
+              dscores, vocab_cache)
+          d_embed_captions, grad_hidden, grads['Wx'], grads['Wh'], grads[
+              'b'] = lstm_backward(d_rnn_h, lstm_hidden_cache)
 
         grads['W_embed'] = word_embedding_backward(
             d_embed_captions, embed_cache_ground)
