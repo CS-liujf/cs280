@@ -46,7 +46,7 @@ def compute_saliency_maps(X:torch.Tensor, y:torch.LongTensor, model:torch.nn.Mod
     ##############################################################################
     return saliency
 
-def make_fooling_image(X, target_y, model):
+def make_fooling_image(X:torch.Tensor, target_y:int, model:torch.nn.Module):
     """
     Generate a fooling image that is close to X, but that the model classifies
     as target_y.
@@ -80,7 +80,20 @@ def make_fooling_image(X, target_y, model):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    for _ in range(100):
+        scores:torch.Tensor=model(X_fooling)
+        _, pred=torch.max(scores,1)
+        if pred == target_y:
+            break
+        
+        loss = scores[0, target_y]
+        loss.backward()
+
+        grads:torch.Tensor = X_fooling.grad.data
+        grads_norm = torch.norm(grads)
+        X_fooling.data += learning_rate*grads/grads_norm
+
+        X_fooling.grad.zero_()
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
