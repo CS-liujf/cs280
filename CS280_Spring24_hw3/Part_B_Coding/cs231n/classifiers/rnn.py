@@ -261,7 +261,16 @@ class CaptioningRNN(object):
             captions[:, t] = word
             prev_h = next_h
         elif self.cell_type == 'lstm':
-          pass
+          prev_c=np.zeros_like(prev_h)
+          for t in range(max_length):
+            prev_word = captions[:, t-1]
+            prev_embed_word, _ = word_embedding_forward(prev_word, W_embed)
+            next_h,next_c, _ = lstm_step_forward(prev_embed_word, prev_h, prev_c,Wx, Wh, b)
+            vocab_scores, _ = affine_forward(next_h, W_vocab, b_vocab)
+            word = np.argmax(vocab_scores, axis=1)
+            captions[:, t] = word
+            prev_h = next_h
+            prev_c=next_c
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
