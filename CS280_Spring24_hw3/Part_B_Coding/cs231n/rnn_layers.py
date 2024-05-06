@@ -175,11 +175,9 @@ def rnn_backward(dh: np.ndarray, cache: RNN_Forward_Cache) -> tuple[np.ndarray, 
     db = np.zeros((H,))
     dprev_h_t = np.zeros((N, H))
 
+    h[:, -1, :] = h0
     for t in reversed(range(T)):
-        if t == 0:
-            prev_h = h0
-        else:
-            prev_h = h[:, t - 1, :]
+        prev_h = h[:, t - 1, :]
         cache_t: RNN_Step_Cache = (x[:, t, :], prev_h, Wx, Wh, b)
         dh_t = dh[:, t, :]+dprev_h_t
         dx[:, t, :], dprev_h_t, dWx_t, dWh_t, db_t = rnn_step_backward(
