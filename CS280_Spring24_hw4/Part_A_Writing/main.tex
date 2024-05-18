@@ -1,0 +1,212 @@
+\documentclass[12pt]{article}%
+\usepackage{amsfonts}
+\usepackage{fancyhdr}
+\usepackage{comment}
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2.2cm, right=2.2cm]%
+{geometry}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage{changepage}
+\usepackage{amssymb}
+\usepackage{graphicx}%
+% \usepackage{pythonhighlight}
+\usepackage{tcolorbox}
+% \setlength{\parindent}{0pt}
+\usepackage{parskip}
+% \tcbuselibrary{minted,breakable,xparse,skins}
+
+% \definecolor{bg}{gray}{0.95}
+% \DeclareTCBListing{mintedbox}{O{}m!O{}}{%
+%   breakable=true,
+%   listing engine=minted,
+%   listing only,
+%   minted language=#2,
+%   minted style=default,
+%   minted options={%
+%     linenos,
+%     gobble=0,
+%     breaklines=true,
+%     breakafter=,,
+%     fontsize=\small,
+%     numbersep=12pt,
+%     #1},
+%   boxsep=0pt,
+%   left skip=0pt,
+%   right skip=0pt,
+%   left=25pt,
+%   right=0pt,
+%   top=3pt,
+%   bottom=3pt,
+%   arc=5pt,
+%   leftrule=0pt,
+%   rightrule=0pt,
+%   bottomrule=2pt,
+%   toprule=2pt,
+%   colback=bg,
+%   colframe=orange!70,
+%   enhanced,
+%   overlay={%
+%     \begin{tcbclipinterior}
+%     \fill[orange!20!white] (frame.south west) rectangle ([xshift=20pt]frame.north west);
+%     \end{tcbclipinterior}},
+%   #3}
+\setcounter{MaxMatrixCols}{30}
+\newtheorem{theorem}{Theorem}
+\newtheorem{acknowledgement}[theorem]{Acknowledgement}
+\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{axiom}{Axiom}
+\newtheorem{case}[theorem]{Case}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{conclusion}[theorem]{Conclusion}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{criterion}[theorem]{Criterion}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{exercise}[theorem]{Exercise}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{solution}[theorem]{Solution}
+\newtheorem{summary}[theorem]{Summary}
+\newenvironment{proof}[1][Proof]{\textbf{#1.} }{\ \rule{0.5em}{0.5em}}
+
+
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+
+\begin{document}
+
+\title{CS280 Spring 2024 Assignment 4 \\ Part A}
+\author{Deep Generative Models}
+\maketitle
+
+\paragraph{Name:}
+
+\paragraph{Student ID:}
+
+\newpage
+
+\section*{1. Generative Adversarial Networks (16 points)}
+%Generative Adversarial Networks (GANs) belong to the family of implicit generative models.
+
+To model high-dimensional data distributions $p_{\text{data}}(\mathbf{x})$ (with $\mathbf{x} \in \mathbb{R}^n$), we define
+\begin{itemize}
+  \item a generator $G : \mathbb{R}^k \rightarrow \mathbb{R}^n$
+  \item a discriminator $D : \mathbb{R}^n \rightarrow (0, 1)$
+\end{itemize}
+
+To obtain samples from the generator, we first sample a $k$-dimensional random vector $\mathbf{z} \sim \mathcal{N}(0, I)$ and return $G(\mathbf{z}) \in \mathbb{R}^n$. The discriminator is a classifier that judges how realistic the fake samples $G(\mathbf{z})$ are, compared to real samples from the data distribution $\mathbf{x} \sim p_{\text{data}}(\mathbf{x})$.
+
+%\vspace{0.5cm}
+
+Training a GAN can be viewed as solving the following minimax optimization problem, for generator $G$ and discriminator $D$:
+\[
+  \min_G\max_D V(G, D)
+\]
+where\ $V(G, D) = \mathbb{E}_{\mathbf{x} \sim p_{\text{data}}}[\log D(\mathbf{x})] + \mathbb{E}_{\mathbf{z} \sim \mathcal{N}(0,I)}[\log (1 - D(G(\mathbf{z})))]$.
+
+We define discriminator loss $L_{\text{discriminator}}$ and generator loss $L_{\text{generator}}$ that are optimized iteratively with gradient descent:
+\begin{equation*}
+  \begin{split}
+    L_{\text{discriminator}}(D; G) & = - \mathbb{E}_{\mathbf{x} \sim p_{\text{data}}}[\log D(\mathbf{x})] - \mathbb{E}_{\mathbf{z} \sim \mathcal{N}(0,I)}[\log (1 - D(G(\mathbf{z})))] \\
+    L_{\text{generator}}(G; D)  & = \mathbb{E}_{\mathbf{z} \sim \mathcal{N}(0,I)}[\log (1 - D(G(\mathbf{z})))]
+  \end{split}
+\end{equation*}
+
+%\vspace{0.3cm}
+
+%At each iteration, we take a gradient step to minimize $L_{\text{discriminator}}(\phi; \theta)$ w.r.t discriminator parameters $\phi$, followed by a gradient step to minimize $L_{\text{generator}}(\theta; \phi)$ w.r.t. generator parameters $\theta$.
+
+
+\newpage
+%\textbf{(a) (4 points)} Vanishing Gradient with Minimax Objective
+
+%Rewriting the above loss in terms of discriminator logits, sigmoid we have
+%\[
+%  L_{\text{generator}}(\theta; \phi) = \mathbb{E}_{\mathbf{z} \sim \mathcal{N}(0,I)}\big[\log (1 - %D_{\phi}(G_\theta(\mathbf{z}))\big]
+%\]
+
+%\textbf{Show that} $\nabla_\theta L_{\text{generator}}(\theta; \phi) \rightarrow 0$ \textbf{when discriminator output} $D_\phi(G_\theta(\mathbf{z})) \approx 0$. Why is this problematic for training the generator when the discriminator is well-trained in identifying fake samples?
+
+%\newpage
+
+\textbf{(a) (8 points)} Optimal Discriminator
+
+%To build intuition about the training objective, c
+Consider the model distribution $p_{\text{model}}(\mathbf{x})$ corresponding to:
+\[
+  \mathbf{x} = G(\mathbf{z}), \quad \mathbf{z} \sim \mathcal{N}(0, I)
+\]
+For a fixed generator $G$ (i.e., $p_{\text{model}}(\mathbf{x})$ is fixed), show that the discriminator loss is minimized when $D^* = \frac{p_{\text{data}}(\mathbf{x})}{p_{\text{model}}(\mathbf{x}) + p_{\text{data}}(\mathbf{x})}$
+
+\newpage
+
+\textbf{(b) (8 points)} Divergence Minimization
+
+Given optimal discriminator $D^*$, show that the minimax objective is:
+\[
+  V(G, D^*) = 2D_{\text{JS}}(p_{\text{data}} \| p_{\text{model}}) -\log 4
+\]
+where $D_{\text{JS}}(p\|q)$ is the Jensen-Shannon Divergence.
+
+Note: A divergence measures the distance between two distributions $p, q$. Commonly used divergence metrics include:
+\begin{equation*}
+  \begin{split}
+    D_{\text{KL}}(p \| q)  & = \mathbb{E}_{\mathbf{x} \sim p} \left[ \log \frac{p(x)}{q(x)} \right],
+    \\ 
+    D_{\text{JS}}(p \| q) & = \frac{1}{2} D_{\text{KL}}(p \| \frac{p + q}{2}) + \frac{1}{2} D_{\text{KL}}(q \| \frac{p + q}{2}),
+  \end{split}
+\end{equation*}
+where $D_{\text{KL}}$ is the \textit{Kullback-Leibler Divergence} and $D_{\text{JS}}$ is the \textit{Jensen-Shannon Divergence}.
+
+
+
+\newpage
+
+
+\section*{2. Diffusion Models (10 points)}
+
+\textbf{(a) (5 points)} One critical part of being able to train a denoising diffusion model is to be able to quickly sample $z_t$ given $z_0$ where $z_0$ is our initial data point.
+
+%\vspace{0.15cm}
+
+Suppose the variance for the one-step forward diffusion at time $t$ is given by $\beta_t$. This means that in terms of conditional distributions, we have:
+\[
+  q(z_t \mid z_{t-1}) = \mathcal{N}(z_t; \sqrt{1-\beta_t} z_{t-1}, \beta_t I),
+\]
+where $\mathcal{N}(z_t; \sqrt{1-\beta_t} z_{t-1}, \beta_t I)$ denotes a Gaussian distribution with mean $\sqrt{1-\beta_t} z_{t-1}$ and covariance $\beta_t I$.
+
+What is $\bar{\alpha}_t$ so that the conditional distribution of $z_t$ given $z_0$ is just Gaussian with known mean and covariance as follows:
+\[
+  q(z_t \mid z_0) = \mathcal{N}(z_t; \sqrt{\bar{\alpha}_t}z_0, (1-\bar{\alpha}_t)I)
+\]
+\textbf{You should write the expression for $\bar{\alpha}_t$ and show your derivation process.}
+
+Your answer should involve the $\beta_t$ values.
+
+Hint: The sum of two independent Gaussian random variables, $\epsilon_1 \sim \mathcal{N}(\mu_1, \sigma^2_1I)$ and $\epsilon_2 \sim \mathcal{N}(\mu_1, \sigma^2_1I)$, gives $\epsilon_1 + \epsilon_2 \sim \mathcal{N}(\mu_1+\mu_2, (\sigma^2_1+\sigma^2_2)I)$.
+
+\newpage
+
+\textbf{(b) (5 points)} The forward diffusion looks similar wherever you start. Suppose we want to quickly generate a sample of $z_{\tau}$ given $z_t$ where $\tau > t$.
+
+%\vspace{0.15cm}
+
+What is $\gamma_{\tau,t}$ so that the conditional distribution of $z_{\tau}$ given $z_t$ is just Gaussian with known mean and covariance as follows:
+\[
+  q(z_{\tau} \mid z_t) = \mathcal{N}(z_{\tau}; \sqrt{\gamma_{\tau,t}} z_t, (1-\gamma_{\tau,t})I)
+\]
+Your answer should just involve the $\bar{\alpha}_t$ and $\bar{\alpha}_{\tau}$ values that your derive in question (a).
+
+
+
+
+
+
+\end{document}
