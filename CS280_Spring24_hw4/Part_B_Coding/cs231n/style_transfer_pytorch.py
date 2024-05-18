@@ -11,7 +11,7 @@ from .image_utils import SQUEEZENET_MEAN, SQUEEZENET_STD
 dtype = torch.FloatTensor
 # Uncomment out the following line if you're on a machine with a GPU set up for PyTorch!
 #dtype = torch.cuda.FloatTensor
-def content_loss(content_weight, content_current, content_original):
+def content_loss(content_weight:float, content_current:torch.Tensor, content_original:torch.Tensor):
     """
     Compute the content loss for style transfer.
 
@@ -26,7 +26,7 @@ def content_loss(content_weight, content_current, content_original):
     """
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    return content_weight*((content_current-content_original)**2).sum()
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
