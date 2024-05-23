@@ -11,7 +11,9 @@ from .image_utils import SQUEEZENET_MEAN, SQUEEZENET_STD
 dtype = torch.FloatTensor
 # Uncomment out the following line if you're on a machine with a GPU set up for PyTorch!
 #dtype = torch.cuda.FloatTensor
-def content_loss(content_weight:float, content_current:torch.Tensor, content_original:torch.Tensor):
+
+
+def content_loss(content_weight: float, content_current: torch.Tensor, content_original: torch.Tensor):
     """
     Compute the content loss for style transfer.
 
@@ -30,7 +32,8 @@ def content_loss(content_weight:float, content_current:torch.Tensor, content_ori
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-def gram_matrix(features, normalize=True):
+
+def gram_matrix(features: torch.Tensor, normalize=True) -> torch.Tensor:
     """
     Compute the Gram matrix from features.
 
@@ -46,12 +49,22 @@ def gram_matrix(features, normalize=True):
     """
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N, C, H, W = features.size()
+    features_flattened = features.view(N, C, -1)
+    gram = features_flattened @ features_flattened.transpose(1, 2)
+
+    if normalize:
+        norm_factor = H * W * C
+        gram = gram / norm_factor
+
+    return gram
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
 # Now put it together in the style_loss function...
-def style_loss(feats, style_layers, style_targets, style_weights):
+
+
+def style_loss(feats: list[torch.Tensor], style_layers: list[int], style_targets: list[torch.Tensor], style_weights: list[float | int]) -> torch.Tensor:
     """
     Computes the style loss at a set of layers.
 
@@ -73,7 +86,13 @@ def style_loss(feats, style_layers, style_targets, style_weights):
     # not be very much code (~5 lines). You will need to use your gram_matrix function.
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    st_loss = torch.Tensor([0])
+    for i, layer_idx in enumerate(style_layers):
+        current_gram = gram_matrix(feats[layer_idx].clone())
+        source_gram = style_targets[i]
+        st_loss += content_loss(style_weights[i], current_gram, source_gram)
+
+    return st_loss
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -179,8 +198,10 @@ def extract_features(x, cnn):
     return features
 
 #please disregard warnings about initialization
-def features_from_img(imgpath, imgsize, cnn):
-    img = preprocess(PIL.Image.open(imgpath), size=imgsize)
+
+
+def features_from_img(imgpath, imgsize, cnn) -> tuple[list[torch.Tensor], int]:
+    img: torch.Tensor = preprocess(PIL.Image.open(imgpath), size=imgsize)
     img_var = img.type(dtype)
     return extract_features(img_var, cnn), img_var
 
