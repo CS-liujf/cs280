@@ -14,7 +14,8 @@ NOISE_DIM = 96
 dtype = torch.FloatTensor
 #dtype = torch.cuda.FloatTensor ## UNCOMMENT THIS LINE IF YOU'RE ON A GPU!
 
-def sample_noise(batch_size, dim, seed=None):
+
+def sample_noise(batch_size: int, dim: int, seed=None) -> torch.Tensor:
     """
     Generate a PyTorch Tensor of uniform random noise.
 
@@ -28,10 +29,11 @@ def sample_noise(batch_size, dim, seed=None):
     """
     if seed is not None:
         torch.manual_seed(seed)
-        
+
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    ans = torch.rand(batch_size, dim)*2-1
+    return ans
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     
