@@ -147,7 +147,8 @@ def generator_loss(logits_fake: torch.Tensor) -> torch.Tensor:
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return loss
 
-def get_optimizer(model):
+
+def get_optimizer(model: torch.nn.Module) -> optim.Adam:
     """
     Construct and return an Adam optimizer for the model with learning rate 1e-3,
     beta1=0.5, and beta2=0.999.
@@ -158,10 +159,10 @@ def get_optimizer(model):
     Returns:
     - An Adam optimizer for the model with the desired hyperparameters.
     """
-    optimizer = None
+
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    optimizer = optim.Adam(model.parameters(), lr=1e-3, betas=(0.5, 0.999))
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return optimizer
