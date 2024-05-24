@@ -96,7 +96,8 @@ def style_loss(feats: list[torch.Tensor], style_layers: list[int], style_targets
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-def tv_loss(img, tv_weight):
+
+def tv_loss(img: torch.Tensor, tv_weight: float) -> torch.Tensor:
     """
     Compute total variation loss.
 
@@ -111,10 +112,20 @@ def tv_loss(img, tv_weight):
     # Your implementation should be vectorized and not require any loops!
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    horizontal_part = torch.pow(
+        img[:, :, :, :-1] - img[:, :, :, 1:], torch.Tensor([2])).sum()
+    vertical_part = torch.pow(
+        img[:, :, :-1, :] - img[:, :, 1:, :], torch.Tensor([2])).sum()
+    tv_loss = horizontal_part + vertical_part
+
+    loss = tv_weight * tv_loss
+
+    return loss
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-def preprocess(img, size=512):
+
+
+def preprocess(img, size=512) -> torch.Tensor:
     """ Preprocesses a PIL JPG Image object to become a Pytorch tensor
         that is ready to be used as an input into the CNN model.
         Preprocessing steps:
