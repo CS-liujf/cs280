@@ -1,3 +1,5 @@
+from torch.utils.data import DataLoader
+from typing import Callable
 import numpy as np
 
 import torch
@@ -167,7 +169,8 @@ def get_optimizer(model: torch.nn.Module) -> optim.Adam:
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return optimizer
 
-def ls_discriminator_loss(scores_real, scores_fake):
+
+def ls_discriminator_loss(scores_real: torch.Tensor, scores_fake: torch.Tensor) -> torch.Tensor:
     """
     Compute the Least-Squares GAN loss for the discriminator.
     
@@ -178,15 +181,16 @@ def ls_discriminator_loss(scores_real, scores_fake):
     Outputs:
     - loss: A PyTorch Tensor containing the loss.
     """
-    loss = None
+
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    loss = 1/2*torch.mean(((scores_real-1).pow(2)+scores_fake.pow(2)))
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return loss
 
-def ls_generator_loss(scores_fake):
+
+def ls_generator_loss(scores_fake: torch.Tensor) -> torch.Tensor:
     """
     Computes the Least-Squares GAN loss for the generator.
     
@@ -196,10 +200,10 @@ def ls_generator_loss(scores_fake):
     Outputs:
     - loss: A PyTorch Tensor containing the loss.
     """
-    loss = None
+
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    loss = 1/2*torch.mean((scores_fake-1).pow(2))
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return loss
@@ -245,7 +249,12 @@ def build_dc_generator(noise_dim=NOISE_DIM):
     #                               END OF YOUR CODE                             #
     ##############################################################################
 
-def run_a_gan(D, G, D_solver, G_solver, discriminator_loss, generator_loss, loader_train, show_every=250, 
+
+D_Loss_Func = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+G_Loss_Func = Callable[[torch.Tensor], torch.Tensor]
+
+
+def run_a_gan(D: torch.nn.Module, G: torch.nn.Module, D_solver: optim.Optimizer, G_solver: optim.Optimizer, discriminator_loss: D_Loss_Func, generator_loss: G_Loss_Func, loader_train: DataLoader, show_every=250,
               batch_size=128, noise_size=96, num_epochs=10):
     """
     Train a GAN!
