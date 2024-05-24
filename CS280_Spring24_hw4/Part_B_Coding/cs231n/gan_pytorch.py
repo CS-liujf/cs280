@@ -106,7 +106,8 @@ def bce_loss(input, target):
     loss = input.clamp(min=0) - input * target + (1 + neg_abs.exp()).log()
     return loss.mean()
 
-def discriminator_loss(logits_real, logits_fake):
+
+def discriminator_loss(logits_real: torch.Tensor, logits_fake: torch.Tensor) -> torch.Tensor:
     """
     Computes the discriminator loss described above.
     
@@ -117,15 +118,18 @@ def discriminator_loss(logits_real, logits_fake):
     Returns:
     - loss: PyTorch Tensor containing (scalar) the loss for the discriminator.
     """
-    loss = None
+
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    real_bce_loss = bce_loss(logits_real, torch.ones(logits_real.size()))
+    fake_bce_loss = bce_loss(logits_fake, torch.zeros(logits_fake.size()))
+    loss = real_bce_loss+fake_bce_loss
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return loss
 
-def generator_loss(logits_fake):
+
+def generator_loss(logits_fake: torch.Tensor) -> torch.Tensor:
     """
     Computes the generator loss described above.
 
@@ -135,10 +139,10 @@ def generator_loss(logits_fake):
     Returns:
     - loss: PyTorch Tensor containing the (scalar) loss for the generator.
     """
-    loss = None
+
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    loss = bce_loss(logits_fake, torch.ones(logits_fake.size()))
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return loss
