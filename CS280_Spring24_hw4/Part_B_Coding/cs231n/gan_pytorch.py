@@ -62,15 +62,14 @@ def discriminator(seed: None | int = None):
     ##############################################################################
     return model
     
-def generator(noise_dim=NOISE_DIM, seed=None):
+
+def generator(noise_dim: int = NOISE_DIM, seed: int | None = None) -> nn.Sequential:
     """
     Build and return a PyTorch model implementing the architecture above.
     """
 
     if seed is not None:
         torch.manual_seed(seed)
-
-    model = None
 
     ##############################################################################
     # TODO: Implement architecture                                               #
@@ -79,7 +78,8 @@ def generator(noise_dim=NOISE_DIM, seed=None):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    model = nn.Sequential(nn.Linear(noise_dim, 1024), nn.ReLU(), nn.Linear(
+        1024, 1024), nn.ReLU(), nn.Linear(1024, 784), nn.Tanh())
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
